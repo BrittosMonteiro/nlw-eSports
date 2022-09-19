@@ -21,12 +21,16 @@ function App() {
   const [games, setGames] = useState<Game[]>([]);
   let weekDaysPlaying = [];
 
-  useEffect(() => {
+  function getListGames() {
     fetch("http://localhost:3000/games")
       .then((res) => res.json())
       .then((res) => {
         setGames(res);
       });
+  }
+
+  useEffect(() => {
+    getListGames();
   });
 
   function addRemoveWeekDaysPlaying(idDay: any) {
@@ -40,19 +44,34 @@ function App() {
     console.log(pos, weekDaysPlaying);
   }
 
-  function createNewAd(event: any) {
+  async function createNewAd(event: any) {
     event.preventDefault();
+
     const ad = {
       name: event.target.name.value,
-      yearsPlaying: event.target.yearsPlaying.value,
+      yearsPlaying: parseInt(event.target.yearsPlaying.value),
       discord: event.target.discord.value,
       game: event.target.game.value,
       weekDays: weekDaysPlaying,
       hourStart: event.target.hourStart.value,
       hourEnd: event.target.hourEnd.value,
-      useVoiceChannel: event.target.useVoiceChannel.value,
+      useVoiceChannel:
+        event.target.useVoiceChannel.value === "on" ? true : false,
     };
-    console.log(ad);
+
+    await fetch(`http://localhost:3000/games/${ad.game}/ads`, {
+      method: "POST",
+      body: JSON.stringify(ad),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then(() => {
+        getListGames();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
 
   return (
@@ -220,9 +239,9 @@ function App() {
                       A que horas costuma jogar?
                     </label>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input type="number" id="hourStart" placeholder="De" />
+                      <Input type="time" id="hourStart" placeholder="De" />
 
-                      <Input type="number" id="hourEnd" placeholder="Até" />
+                      <Input type="time" id="hourEnd" placeholder="Até" />
                     </div>
                   </div>
                 </div>
